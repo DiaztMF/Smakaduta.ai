@@ -1,4 +1,6 @@
-import { getDb } from "./db";
+import { db } from "./db";
+import { resources, type InsertResource } from "./db/schema";
+import { eq, sql, count, min, desc } from "drizzle-orm";
 import { generateEmbedding } from "./embeddings";
 
 /**
@@ -35,12 +37,17 @@ export async function findRelevantContent(
   try {
     // Step 1: Vectorize the query (PRD Section 6, Step 1)
     const queryEmbedding = await generateEmbedding(query);
-
-    // Step 2: Cosine similarity search using pgvector <=> operator (PRD Section 6, Step 2)
-    const sql = getDb();
     const embeddingStr = `[${queryEmbedding.join(",")}]`;
 
-    const results = await sql`
+    // Step 2: Cosine similarity search using pgvector <=> operator
+    // Note: pgvector operators require raw SQL via db.execute()
+    const results = await db.execute<{
+      id: number;
+      content: string;
+      source_name: string;
+      source_type: string;
+      similarity: number;
+    }>(sql`
       SELECT 
         id,
         content,
@@ -51,17 +58,17 @@ export async function findRelevantContent(
       WHERE embedding IS NOT NULL
       ORDER BY embedding <=> ${embeddingStr}::halfvec(2048)
       LIMIT ${limit}
-    `;
+    `);
 
     // Filter by minimum similarity
-    return results
-      .filter((row: any) => row.similarity >= minSimilarity)
-      .map((row: any) => ({
+    return results.rows
+      .filter((row) => Number(row.similarity) >= minSimilarity)
+      .map((row) => ({
         id: row.id,
         content: row.content,
         sourceName: row.source_name,
         sourceType: row.source_type,
-        similarity: row.similarity,
+        similarity: Number(row.similarity),
       }));
   } catch (error) {
     console.error("RAG retrieval failed:", error);
@@ -89,6 +96,7 @@ export function buildContextPrompt(chunks: RelevantChunk[]): string {
 
 /**
  * Store a text chunk with its embedding in the database.
+ * Uses Drizzle ORM insert.
  */
 export async function storeChunkWithEmbedding(
   content: string,
@@ -97,45 +105,54 @@ export async function storeChunkWithEmbedding(
   chunkIndex: number
 ): Promise<void> {
   const embedding = await generateEmbedding(content);
-  const sql = getDb();
   const embeddingStr = `[${embedding.join(",")}]`;
 
-  await sql`
+  await db.execute(sql`
     INSERT INTO resources (content, source_name, source_type, chunk_index, embedding)
     VALUES (${content}, ${sourceName}, ${sourceType}, ${chunkIndex}, ${embeddingStr}::halfvec(2048))
-  `;
+  `);
+}
+
+/**
+ * Store a text chunk WITHOUT embedding (for seeding — embeddings added separately).
+ * Uses Drizzle typed insert.
+ */
+export async function storeChunk(
+  data: Omit<InsertResource, "id" | "createdAt" | "updatedAt" | "embedding">
+): Promise<void> {
+  await db.insert(resources).values(data);
 }
 
 /**
  * Get all unique sources in the knowledge base.
+ * Uses Drizzle query builder with groupBy.
  */
 export async function listSources(): Promise<
   { sourceName: string; sourceType: string; chunkCount: number; createdAt: string }[]
 > {
-  const sql = getDb();
-  const results = await sql`
-    SELECT 
-      source_name,
-      source_type,
-      COUNT(*) as chunk_count,
-      MIN(created_at) as created_at
-    FROM resources
-    GROUP BY source_name, source_type
-    ORDER BY MIN(created_at) DESC
-  `;
+  const results = await db
+    .select({
+      sourceName: resources.sourceName,
+      sourceType: resources.sourceType,
+      chunkCount: count(resources.id),
+      createdAt: min(resources.createdAt),
+    })
+    .from(resources)
+    .groupBy(resources.sourceName, resources.sourceType)
+    .orderBy(desc(min(resources.createdAt)));
 
-  return results.map((row: any) => ({
-    sourceName: row.source_name,
-    sourceType: row.source_type,
-    chunkCount: Number(row.chunk_count),
-    createdAt: row.created_at,
+  return results.map((row) => ({
+    sourceName: row.sourceName,
+    sourceType: row.sourceType,
+    chunkCount: row.chunkCount,
+    createdAt: row.createdAt?.toISOString() ?? "",
   }));
 }
 
 /**
  * Delete all chunks from a specific source.
+ * Uses Drizzle delete with where clause.
  */
 export async function deleteSource(sourceName: string): Promise<void> {
-  const sql = getDb();
-  await sql`DELETE FROM resources WHERE source_name = ${sourceName}`;
+  await db.delete(resources).where(eq(resources.sourceName, sourceName));
 }
