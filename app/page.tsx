@@ -17,7 +17,8 @@ import {
   type PromptInputMessage,
 } from "@/components/ai-elements/prompt-input";
 import { ChatHeader } from "@/components/chat/chat-header";
-import { ChatEmptyState } from "@/components/chat/chat-empty-state";
+import { ChatEmptyState, defaultSuggestions } from "@/components/chat/chat-empty-state";
+import { Suggestion, Suggestions } from "@/components/ai-elements/suggestion";
 import { ChatMessages } from "@/components/chat/chat-messages";
 
 export default function ChatPage() {
@@ -43,15 +44,14 @@ export default function ChatPage() {
   const isStreaming = status === "streaming" || status === "submitted";
 
   return (
-    <div className="flex h-dvh flex-col">
+    <div className="flex h-svh flex-col">
       <ChatHeader />
 
-      <main className="flex flex-1 flex-col overflow-hidden">
-        <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col overflow-hidden px-4">
-          <Conversation>
-            <ConversationContent>
+      <main className="relative flex flex-1 flex-col overflow-hidden">
+        <Conversation className="flex-1 w-full">
+          <ConversationContent className="mx-auto flex w-full max-w-3xl flex-col px-4">
               {messages.length === 0 ? (
-                <ChatEmptyState onSuggestionClick={handleSuggestionClick} />
+                <ChatEmptyState />
               ) : (
                 <ChatMessages
                   messages={messages}
@@ -61,10 +61,23 @@ export default function ChatPage() {
               )}
             </ConversationContent>
             <ConversationScrollButton />
-          </Conversation>
+        </Conversation>
 
-          {/* Prompt Input */}
-          <div className="pb-4 pt-2">
+        {/* Prompt Input */}
+        <div className="mx-auto w-full max-w-3xl px-4 pb-4 pt-2">
+            {messages.length === 0 && (
+              <div className="mb-4 flex w-full justify-center">
+                <Suggestions className="!w-auto !flex-wrap justify-center overflow-visible">
+                  {defaultSuggestions.map((suggestion) => (
+                    <Suggestion
+                      key={suggestion}
+                      onClick={handleSuggestionClick}
+                      suggestion={suggestion}
+                    />
+                  ))}
+                </Suggestions>
+              </div>
+            )}
             <PromptInput
               onSubmit={handleSubmit}
               className="w-full"
@@ -90,7 +103,6 @@ export default function ChatPage() {
               </PromptInputFooter>
             </PromptInput>
           </div>
-        </div>
       </main>
     </div>
   );

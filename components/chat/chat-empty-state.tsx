@@ -4,18 +4,18 @@ import { Suggestion, Suggestions } from "@/components/ai-elements/suggestion";
 import { Sparkles } from "lucide-react";
 import Image from "next/image";
 
-const defaultSuggestions = [
+export const defaultSuggestions = [
   "Apa syarat daftar PPDB 2026?",
   "Jurusan apa saja di SMKN 2?",
   "Bagaimana cara daftar zonasi?",
   "Kapan jadwal pendaftaran?",
+  "Apa saja ekstrakurikuler di SMKN 2?",
+  "Berapa kuota jalur prestasi?",
 ];
 
-interface ChatEmptyStateProps {
-  onSuggestionClick: (suggestion: string) => void;
-}
+interface ChatEmptyStateProps {}
 
-export function ChatEmptyState({ onSuggestionClick }: ChatEmptyStateProps) {
+export function ChatEmptyState({}: ChatEmptyStateProps = {}) {
   return (
     <div className="flex flex-1 flex-col items-center justify-center gap-6 px-4 py-12">
       {/* Avatar */}
@@ -36,19 +36,6 @@ export function ChatEmptyState({ onSuggestionClick }: ChatEmptyStateProps) {
           Asisten virtual SMKN 2 Surakarta. Tanyakan apa saja tentang PPDB
           2026, jurusan, syarat pendaftaran, dan informasi sekolah lainnya.
         </p>
-      </div>
-
-      {/* Suggestion Chips */}
-      <div className="w-full max-w-lg">
-        <Suggestions>
-          {defaultSuggestions.map((suggestion) => (
-            <Suggestion
-              key={suggestion}
-              onClick={onSuggestionClick}
-              suggestion={suggestion}
-            />
-          ))}
-        </Suggestions>
       </div>
 
       {/* Footnote */}

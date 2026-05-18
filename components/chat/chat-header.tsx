@@ -1,8 +1,8 @@
 "use client";
 
-import { Moon, Sun, GraduationCap } from "lucide-react";
+import { Moon, Sun, } from "lucide-react";
 import { useEffect, useState } from "react";
-import Image from "next/image";
+import { Button } from "../ui/button";
 
 export function ChatHeader() {
   const [isDark, setIsDark] = useState(false);
@@ -29,20 +29,12 @@ export function ChatHeader() {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/50 bg-background/80 backdrop-blur-xl">
-      <div className="mx-auto flex h-14 max-w-3xl items-center justify-between px-4">
+      <div className="flex h-14 w-full items-center justify-between px-4 md:px-6">
         {/* Brand */}
-        <div className="flex items-center gap-2.5">
-          <div className="flex size-8 items-center justify-center rounded-lg bg-primary">
-            <GraduationCap className="size-5 text-primary-foreground" />
-          </div>
-          <div className="flex flex-col">
-            <span className="text-sm font-bold font-heading leading-none tracking-tight">
-              Smakaduta.ai
-            </span>
-            <span className="text-[10px] text-muted-foreground leading-tight">
-              SMKN 2 Surakarta
-            </span>
-          </div>
+        <div className="flex items-center gap-2 md:gap-4">
+          <span className="text-base md:text-xl font-bold text-foreground select-none cursor-default">
+            Smakaduta.ai
+          </span>
         </div>
 
         {/* Actions */}
