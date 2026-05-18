@@ -1,6 +1,7 @@
 import { streamText, UIMessage, convertToModelMessages } from "ai";
 import { createOpenRouter } from "@openrouter/ai-sdk-provider";
 import { findRelevantContent, buildContextPrompt } from "@/lib/rag";
+import { findCachedAnswer } from "@/lib/answer-cache";
 
 // Allow streaming responses up to 30 seconds
 export const maxDuration = 30;
@@ -44,13 +45,30 @@ export async function POST(req: Request) {
 
   // RAG: Find relevant content from knowledge base (PRD Section 6)
   let contextPrompt = "";
-  if (lastUserMessage) {
-    try {
-      const userText = lastUserMessage.parts
-        .filter((p) => p.type === "text")
-        .map((p) => p.text)
-        .join(" ");
+  let userText = "";
 
+  if (lastUserMessage) {
+    userText = lastUserMessage.parts
+      .filter((p) => p.type === "text")
+      .map((p) => p.text)
+      .join(" ");
+
+    // ─── Cache Check: Bypass RAG untuk pertanyaan template ───────────
+    // Jika pertanyaan cocok dengan template yang sudah diketahui,
+    // stream jawaban langsung tanpa panggil embedding API + DB.
+    const cached = findCachedAnswer(userText);
+    if (cached) {
+      const result = streamText({
+        model: openrouter(MODELS[1]),
+        system: `${BASE_SYSTEM_PROMPT}\n\nJAWABAN REFERENSI (gunakan ini sebagai basis, boleh ditambah sapaan hangat):\n${cached.answer}`,
+        messages: await convertToModelMessages(messages),
+      });
+
+      return result.toUIMessageStreamResponse();
+    }
+    // ──────────────────────────────────────────────────────────────────
+
+    try {
       const relevantChunks = await findRelevantContent(userText, 3);
       contextPrompt = buildContextPrompt(relevantChunks);
     } catch (error) {
@@ -75,7 +93,19 @@ export async function POST(req: Request) {
       });
 
       return result.toUIMessageStreamResponse();
-    } catch (error) {
+    } catch (error: unknown) {
+      const errMsg = error instanceof Error ? error.message : String(error);
+      const isRateLimit = errMsg.includes("429") || errMsg.toLowerCase().includes("rate limit");
+
+      // On rate limit, stop trying other models — they'll likely fail too
+      if (isRateLimit) {
+        console.warn(`Rate limit hit on ${modelId}, skipping remaining models.`);
+        return new Response(
+          JSON.stringify({ error: "Rate limit: 429 Too Many Requests" }),
+          { status: 429, headers: { "Content-Type": "application/json" } }
+        );
+      }
+
       lastError = error;
       console.error(`Model ${modelId} failed, trying next...`, error);
       continue;
