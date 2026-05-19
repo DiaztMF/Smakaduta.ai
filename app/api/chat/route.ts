@@ -28,6 +28,11 @@ IDENTITAS:
 - Fungsi: Menjawab pertanyaan seputar PPDB 2026 dan informasi umum sekolah
 - Kepribadian: Ramah, sabar, informatif, profesional`;
 
+// Max output tokens capped at 8192 — Venice AI (OpenRouter free backend) has a hard limit of 16384.
+// Setting half that gives headroom for the system prompt + context in the request.
+// NOTE: AI SDK v5 renamed `maxTokens` → `maxOutputTokens`.
+const MAX_OUTPUT_TOKENS = 8192;
+
 // Ordered list of models for failover (S-04.1, S-04.2)
 const MODELS = [
   "nvidia/nemotron-3-super-120b-a12b:free",
@@ -62,6 +67,7 @@ export async function POST(req: Request) {
         model: openrouter(MODELS[1]),
         system: `${BASE_SYSTEM_PROMPT}\n\nJAWABAN REFERENSI (gunakan ini sebagai basis, boleh ditambah sapaan hangat):\n${cached.answer}`,
         messages: await convertToModelMessages(messages),
+        maxOutputTokens: MAX_OUTPUT_TOKENS,
       });
 
       return result.toUIMessageStreamResponse();
@@ -90,6 +96,7 @@ export async function POST(req: Request) {
         model: openrouter(modelId),
         system: systemPrompt,
         messages: modelMessages,
+        maxOutputTokens: MAX_OUTPUT_TOKENS,
       });
 
       return result.toUIMessageStreamResponse();
