@@ -25,7 +25,7 @@ import { ChatMessages } from "@/components/chat/chat-messages";
 export default function ChatPage() {
   const [input, setInput] = useState("");
 
-  const { messages, sendMessage, status, regenerate, error, reload } = useChat({
+  const { messages, sendMessage, status, regenerate, error } = useChat({
     transport: new DefaultChatTransport({
       api: "/api/chat",
     }),
@@ -62,7 +62,7 @@ export default function ChatPage() {
               )}
               {error && (
                 <div className="px-0 pb-2 pt-1">
-                  <ChatErrorState error={error} onRetry={reload} />
+                  <ChatErrorState error={error} onRetry={regenerate} />
                 </div>
               )}
             </ConversationContent>
