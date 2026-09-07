@@ -136,8 +136,9 @@ Akses → **https://ppdb.jatengprov.go.id**
 
 ### 📞 Kontak PPDB
 - Hotline: **(0271) 714901**
-- Email: **ppdb@smkn2surakarta.sch.id**
-- Lokasi Posko: Gedung Utama SMKN 2, Jl. LU. Adisucipto No. 33
+- Email: **info@smkn2solo.sch.id**
+- Website: **https://smkn2solo.sch.id**
+- Lokasi Posko: Gedung Utama SMKN 2 Surakarta, Jl. Adi Sucipto No. 33
 
 > ⏰ Segera siapkan dokumen sebelum pendaftaran dibuka ya!`,
     },

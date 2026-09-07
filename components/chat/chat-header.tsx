@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { Info, Moon, RotateCcw, Sparkles, Sun } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
@@ -61,19 +60,11 @@ export function ChatHeader({ onReset, hasMessages = false }: ChatHeaderProps) {
             </span>
           </div>
 
-          {/* Titles & Badge */}
+          {/* Titles */}
           <div className="flex flex-col justify-center">
-            <div className="flex items-center gap-1.5 sm:gap-2">
-              <span className="text-sm font-bold tracking-tight text-foreground sm:text-base select-none">
-                Smakaduta.ai
-              </span>
-              <Badge
-                variant="secondary"
-                className="hidden sm:inline-flex text-[10px] font-semibold"
-              >
-                PPDB 2026
-              </Badge>
-            </div>
+            <span className="text-sm font-bold tracking-tight text-foreground sm:text-base select-none">
+              Smakaduta.ai
+            </span>
             <span className="text-[11px] leading-tight text-muted-foreground select-none">
               Kak Duta
             </span>

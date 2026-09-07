@@ -23,10 +23,10 @@ const SEED_DOCUMENTS: { sourceName: string; sourceType: string; content: string 
 - **NPSN:** 20328120
 - **Status:** Negeri
 - **Akreditasi:** A (Unggul)
-- **Alamat:** Jl. LU. Adisucipto No. 33, Manahan, Kec. Banjarsari, Kota Surakarta, Jawa Tengah 57139
+- **Alamat:** Jl. Adi Sucipto No. 33, Manahan, Kec. Banjarsari, Kota Surakarta, Jawa Tengah 57139
 - **Telepon:** (0271) 714901
-- **Website:** https://smkn2surakarta.sch.id
-- **Email:** smkn2solo@yahoo.co.id
+- **Website:** https://smkn2solo.sch.id
+- **Email:** info@smkn2solo.sch.id
 
 ## Visi
 Menjadi SMK Pusat Keunggulan yang menghasilkan lulusan berkarakter, kompeten, dan berdaya saing global.
@@ -140,9 +140,9 @@ Setiap jurusan dilengkapi dengan laboratorium dan bengkel praktik yang modern se
 
 ## Kontak PPDB
 - **Hotline PPDB:** (0271) 714901
-- **WhatsApp:** 0812-XXXX-XXXX (akan diumumkan saat pendaftaran dibuka)
-- **Email:** ppdb@smkn2surakarta.sch.id
-- **Lokasi Posko PPDB:** Gedung Utama SMKN 2 Surakarta, Jl. LU. Adisucipto No. 33`,
+- **Telegram Info:** https://t.me/+mBWD8k7ebu84ZjY9
+- **Email:** info@smkn2solo.sch.id
+- **Lokasi Posko PPDB:** Gedung Utama SMKN 2 Surakarta, Jl. Adi Sucipto No. 33`,
   },
   {
     sourceName: "Fasilitas Sekolah SMKN 2 Surakarta",
@@ -271,8 +271,9 @@ A: SMKN 2 Surakarta tidak menyediakan asrama resmi. Namun, banyak kost-kostan te
 
 ## Q: Di mana saya bisa mendapatkan info terbaru tentang PPDB?
 A: Info terbaru bisa diakses melalui:
-- Website: https://smkn2surakarta.sch.id
-- Instagram: @smkn2surakarta.official
+- Website: https://smkn2solo.sch.id
+- Instagram: @smkn2surakarta
+- YouTube: @smknegeri2surakarta1952
 - Chatbot Kak Duta (Smakaduta.ai)
 - Posko PPDB di sekolah`,
   },
