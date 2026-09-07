@@ -110,7 +110,7 @@ export default function ChatPage() {
             )}
             <PromptInput
               onSubmit={handleSubmit}
-              className="w-full"
+              className="w-full rounded-2xl border-foreground/15 bg-muted shadow-[0_2px_16px_-6px_rgb(0_0_0/0.12)] dark:border-white/15 dark:bg-muted"
             >
               <PromptInputBody>
                 <PromptInputTextarea
@@ -118,6 +118,8 @@ export default function ChatPage() {
                   onChange={(e) => setInput(e.target.value)}
                   placeholder="Tanya Kak Duta tentang PPDB..."
                   disabled={isStreaming}
+                  aria-label="Tulis pesan untuk Kak Duta"
+                  className="text-foreground placeholder:text-muted-foreground"
                 />
               </PromptInputBody>
               <PromptInputFooter>
