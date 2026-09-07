@@ -95,8 +95,8 @@ export default function ChatPage() {
         {/* Prompt Input */}
         <div className="mx-auto w-full max-w-3xl px-4 pb-4 pt-2">
             {messages.length === 0 && (
-              <div className="mb-4 flex w-full justify-center">
-                <Suggestions className="!w-auto !flex-wrap justify-center overflow-visible [&_button:nth-child(n+4)]:hidden sm:[&_button:nth-child(n+4)]:inline-flex">
+              <div className="mb-4 hidden w-full justify-center sm:flex">
+                <Suggestions className="!w-auto !flex-wrap justify-center overflow-visible">
                   {defaultSuggestions.map((suggestion) => (
                     <Suggestion
                       key={suggestion}
@@ -129,7 +129,7 @@ export default function ChatPage() {
                 <div className="flex items-center gap-1.5">
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <span className="inline-flex">
+                      <span className="hidden sm:inline-flex">
                         <SpeechInput
                           type="button"
                           lang="id-ID"
