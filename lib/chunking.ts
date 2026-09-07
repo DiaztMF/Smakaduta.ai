@@ -73,7 +73,14 @@ export function chunkText(
       chunkIndex++;
     }
 
-    // Move start forward by (end - overlap), ensuring progress
+    // Reached the end of the text — stop here. Without this guard,
+    // a tail shorter than `overlap` makes step collapse to 1 and
+    // generates hundreds of near-duplicate 1-char-shifted chunks.
+    if (end >= cleanedText.length) {
+      break;
+    }
+
+    // Move start forward by (chunk length - overlap), ensuring progress
     const step = Math.max(end - start - overlap, 1);
     start = start + step;
   }
