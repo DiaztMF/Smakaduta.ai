@@ -19,64 +19,85 @@ const SEED_DOCUMENTS: { sourceName: string; sourceType: string; content: string 
 
 ## Identitas Sekolah
 - **Nama Resmi:** SMK Negeri 2 Surakarta
-- **Nama Populer:** Stemsa / Smakaduta
+- **Nama Populer:** Stemsa / Smakaduta (dulu STMN 1 Solo)
 - **NPSN:** 20328120
-- **Status:** Negeri
+- **Status:** Negeri — SMK Pusat Keunggulan
 - **Akreditasi:** A (Unggul)
+- **Motto:** Mendunia dan Berbudaya
 - **Alamat:** Jl. Adi Sucipto No. 33, Manahan, Kec. Banjarsari, Kota Surakarta, Jawa Tengah 57139
 - **Telepon:** (0271) 714901
 - **Website:** https://smkn2solo.sch.id
 - **Email:** info@smkn2solo.sch.id
+- **Instagram:** https://www.instagram.com/smkn2surakarta/
+- **YouTube:** https://www.youtube.com/@smknegeri2surakarta1952
+- **Telegram Info:** https://t.me/+mBWD8k7ebu84ZjY9
 
 ## Visi
-Menjadi SMK Pusat Keunggulan yang menghasilkan lulusan berkarakter, kompeten, dan berdaya saing global.
+Terwujudnya Lulusan yang Berkarakter, Unggul, Berjiwa Wirausaha dan Berbudaya Lingkungan di Era Global.
 
 ## Misi
-1. Menyelenggarakan pendidikan berbasis kompetensi dan karakter.
-2. Mengembangkan pembelajaran yang inovatif dan bermutu.
-3. Meningkatkan kerjasama dengan dunia usaha dan industri (DUDI).
-4. Mewujudkan lingkungan sekolah yang bersih, sehat, dan kondusif.
-5. Mengembangkan potensi siswa melalui kegiatan ekstrakurikuler dan pengembangan diri.
+1. Menyelenggarakan pembelajaran berbasis proyek dan kolaborasi yang mengintegrasikan nilai karakter, kewirausahaan, dan wawasan lingkungan.
+2. Menumbuhkan lingkungan sekolah yang berkarakter melalui pembiasaan integritas, kemandirian, kepedulian, dan tanggung jawab.
+3. Mengembangkan jiwa kewirausahaan murid melalui praktik bisnis nyata, magang di dunia usaha/industri, dan produk inovatif (TEFALOMA — Teaching For Application, Loveable and Marketable, www.tefaloma.com).
+4. Menumbuhkan budaya peduli lingkungan (3R: reduce, reuse, recycle) serta proyek pelestarian alam dan energi terbarukan.
+5. Memperkuat kompetensi global murid melalui teknologi digital, bahasa asing, dan kerja sama dengan sekolah mitra di dalam maupun luar negeri.
+6. Membangun kemitraan strategis dengan dunia usaha, industri, komunitas, dan perguruan tinggi.
 
 ## Sejarah Singkat
-SMK Negeri 2 Surakarta berdiri sejak tahun 1965 dan merupakan salah satu SMK tertua dan terbaik di Kota Surakarta. Sekolah ini telah mencetak ribuan lulusan yang tersebar di berbagai industri nasional maupun internasional.`,
+SMK Negeri 2 Surakarta (dulu STMN 1 Solo) berdiri sejak tahun 1952 dan merupakan salah satu SMK tertua dengan pengalaman lebih dari 72 tahun di bidang pendidikan kejuruan. Sekolah ini telah mencetak ribuan lulusan yang tersebar di berbagai industri nasional maupun internasional.`,
   },
   {
     sourceName: "Jurusan / Kompetensi Keahlian SMKN 2 Surakarta",
     sourceType: "text",
     content: `# Jurusan / Kompetensi Keahlian di SMKN 2 Surakarta
 
-SMKN 2 Surakarta menawarkan beberapa program keahlian unggulan:
+SMKN 2 Surakarta (SMK Pusat Keunggulan) memiliki 10 Program Keahlian:
 
-## 1. Teknik Jaringan Komputer dan Telekomunikasi (TJKT)
-- Mempelajari instalasi jaringan komputer (LAN, WAN, WLAN), konfigurasi server, keamanan jaringan, dan sistem telekomunikasi.
-- Prospek kerja: Network Engineer, IT Support, Teknisi Telekomunikasi.
-- Sertifikasi: MTCNA (MikroTik), CompTIA Network+.
+## Bidang Bangunan & Konstruksi
+## 1. Teknik Konstruksi dan Perumahan (TKP)
+- Mempelajari konstruksi bangunan gedung dan perumahan, gambar teknik, serta manajemen proyek konstruksi.
+- Prospek kerja: Drafter Konstruksi, Pelaksana Lapangan, Kontraktor, Quantity Surveyor.
 
-## 2. Rekayasa Perangkat Lunak (RPL)
-- Mempelajari pemrograman web, mobile, dan desktop. Termasuk database, framework modern, dan metodologi agile.
-- Prospek kerja: Web Developer, Mobile Developer, Software Engineer, Data Analyst.
-- Bahasa pemrograman: PHP, JavaScript, Python, Java, Kotlin.
+## 2. Desain Pemodelan dan Informasi Bangunan (DPIB)
+- Mempelajari desain dan pemodelan informasi bangunan (BIM), gambar kerja arsitektur, dan visualisasi 3D gedung.
+- Prospek kerja: Drafter Arsitektur, BIM Modeler, Visualisator 3D.
 
-## 3. Desain Komunikasi Visual (DKV)
-- Mempelajari desain grafis, branding, ilustrasi digital, fotografi, dan videografi.
-- Prospek kerja: Graphic Designer, UI/UX Designer, Content Creator, Fotografer Profesional.
-- Software: Adobe Photoshop, Illustrator, InDesign, Premiere Pro, After Effects.
+## 3. Teknik Geomatika
+- Mempelajari pengukuran dan pemetaan lahan (survei terestris, GPS, pemetaan digital) serta sistem informasi geografis.
+- Prospek kerja: Surveyor, Drafter Peta, Teknisi Geospasial.
 
-## 4. Animasi
-- Mempelajari animasi 2D dan 3D, motion graphics, character design, dan storyboarding.
-- Prospek kerja: Animator, Motion Graphic Designer, Game Artist.
-- Software: Blender, Maya, Adobe Animate, Toon Boom.
+## Bidang Elektro
+## 4. Teknik Elektronika
+- Mempelajari rangkaian elektronika, sistem kendali, dan peralatan elektronika industri.
+- Prospek kerja: Teknisi Elektronika, Teknisi Maintenance Pabrik.
 
-## 5. Teknik Pendingin dan Tata Udara (TPTU)
-- Mempelajari instalasi dan perawatan sistem pendingin (AC, kulkas, chiller) serta tata udara gedung.
-- Prospek kerja: Teknisi AC, Teknisi Refrigerasi, HVAC Engineer.
-
-## 6. Teknik Instalasi Tenaga Listrik (TITL)
-- Mempelajari instalasi listrik rumah tangga dan industri, panel listrik, PLC, dan otomasi.
+## 5. Teknik Ketenagalistrikan
+- Mempelajari instalasi tenaga listrik, panel listrik, PLC, dan otomasi industri.
 - Prospek kerja: Teknisi Listrik, Electrical Engineer, Teknisi PLC.
 
-Setiap jurusan dilengkapi dengan laboratorium dan bengkel praktik yang modern sesuai standar industri.`,
+## Bidang Informatika
+## 6. Pemrograman Perangkat Lunak dan Gim (PPLG)
+- Mempelajari pemrograman aplikasi dan gim: web, mobile, desktop, database, dan pengembangan gim.
+- Prospek kerja: Web Developer, Mobile Developer, Software Engineer, Game Developer.
+
+## 7. Teknik Jaringan Komputer dan Telekomunikasi (TJKT)
+- Mempelajari instalasi jaringan komputer (LAN, WAN, WLAN), konfigurasi server, keamanan jaringan, dan sistem telekomunikasi.
+- Prospek kerja: Network Engineer, IT Support, Teknisi Telekomunikasi.
+
+## Bidang Mesin & Otomotif
+## 8. Teknik Otomotif
+- Mempelajari perawatan dan perbaikan kendaraan ringan/berat, sistem injeksi, dan teknologi otomotif modern.
+- Prospek kerja: Mekanik, Teknisi Dealer/Agen Pemegang Merek, Wirausaha Bengkel.
+
+## 9. Teknik Mesin
+- Mempelajari pemesinan (bubut, frais, CNC), perawatan mesin industri, dan gambar teknik mesin.
+- Prospek kerja: Operator CNC, Teknisi Maintenance, Drafter Mesin.
+
+## 10. Teknik Pengelasan dan Fabrikasi Logam
+- Mempelajari teknik pengelasan (SMAW, MIG, TIG) dan fabrikasi konstruksi logam.
+- Prospek kerja: Welder bersertifikat, Fabrikator, Teknisi Konstruksi Baja.
+
+Setiap jurusan dilengkapi dengan laboratorium dan bengkel praktik yang modern sesuai standar industri. Hasil pembelajaran berbasis proyek dipasarkan melalui merek TEFALOMA (Teaching For Application, Loveable and Marketable, www.tefaloma.com).`,
   },
   {
     sourceName: "Persyaratan PPDB 2026 SMKN 2 Surakarta",
@@ -150,13 +171,14 @@ Setiap jurusan dilengkapi dengan laboratorium dan bengkel praktik yang modern se
     content: `# Fasilitas SMKN 2 Surakarta
 
 ## Fasilitas Akademik
-- **Laboratorium Komputer** — 5 ruang lab dengan 200+ unit PC terbaru
-- **Bengkel RPL** — Dilengkapi server lokal dan environment pengembangan lengkap
-- **Lab Jaringan (TJKT)** — Perangkat Cisco, MikroTik, fiber optic trainer
-- **Studio DKV** — iMac, tablet grafis Wacom, studio foto mini
-- **Studio Animasi** — Workstation rendering, green screen, motion capture area
-- **Bengkel Pendingin (TPTU)** — Unit AC trainer, kulkas trainer, chiller simulator
-- **Bengkel Listrik (TITL)** — Panel listrik, PLC trainer, simulasi instalasi industri
+- **Laboratorium Komputer & Jaringan** — Ruang lab komputer, perangkat jaringan (Cisco, MikroTik), dan server lokal untuk praktik PPLG dan TJKT
+- **Bengkel Otomotif** — Unit praktik kendaraan, engine trainer, dan peralatan diagnostik
+- **Bengkel Mesin** — Mesin bubut, frais, CNC, dan peralatan pemesinan presisi
+- **Bengkel Pengelasan** — Stasiun las SMAW/MIG/TIG dan area fabrikasi logam
+- **Lab Elektronika & Listrik** — Panel listrik, PLC trainer, dan kit praktikum elektronika
+- **Studio Gambar & Pemodelan (DPIB)** — Workstation desain, software CAD/BIM untuk pemodelan bangunan
+- **Peralatan Survei (Geomatika)** — Total station, GPS geodetik, dan perangkat pemetaan digital
+- **Bengkel Konstruksi** — Area praktik konstruksi bangunan dan perumahan
 
 ## Fasilitas Umum
 - **Perpustakaan Digital** — 10.000+ koleksi buku dan e-book
@@ -204,7 +226,7 @@ Setiap jurusan dilengkapi dengan laboratorium dan bengkel praktik yang modern se
 - **English Club** — Debat bahasa Inggris dan public speaking
 
 ## Prestasi Terbaru
-- Juara 1 LKS Tingkat Provinsi Jawa Tengah (RPL) 2025
+- Juara 1 LKS Tingkat Provinsi Jawa Tengah 2025
 - Finalis Kompetisi Robotika Nasional 2025
 - Juara 2 CTF Competition BSSN 2025
 - Best Film Festival Pelajar Surakarta 2025`,

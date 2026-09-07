@@ -61,25 +61,33 @@ Butuh info lebih lanjut? Hubungi Hotline PPDB: **(0271) 714901** 📞`,
       sourceName: "Jurusan SMKN 2 Surakarta",
       answer: `## 🎓 Jurusan / Kompetensi Keahlian SMKN 2 Surakarta
 
-SMKN 2 Surakarta menawarkan **6 jurusan unggulan**:
+SMKN 2 Surakarta (SMK Pusat Keunggulan) memiliki **10 program keahlian**:
 
-### 💻 Teknologi & Informatika
-| Jurusan | Singkatan | Prospek Karir |
-|---------|-----------|---------------|
-| Teknik Jaringan Komputer & Telekomunikasi | **TJKT** | Network Engineer, IT Support |
-| Rekayasa Perangkat Lunak | **RPL** | Web/Mobile Developer, Software Engineer |
+### 🏗️ Bangunan & Konstruksi
+| Program Keahlian | Prospek Karir |
+|---------|---------------|
+| Teknik Konstruksi & Perumahan (**TKP**) | Pelaksana Lapangan, Kontraktor |
+| Desain Pemodelan & Informasi Bangunan (**DPIB**) | Drafter Arsitektur, BIM Modeler |
+| Teknik Geomatika | Surveyor, Teknisi Geospasial |
 
-### 🎨 Seni & Kreatif
-| Jurusan | Singkatan | Prospek Karir |
-|---------|-----------|---------------|
-| Desain Komunikasi Visual | **DKV** | Graphic Designer, UI/UX, Fotografer |
-| Animasi | **Animasi** | Animator, Motion Designer, Game Artist |
+### ⚡ Elektro
+| Program Keahlian | Prospek Karir |
+|---------|---------------|
+| Teknik Elektronika | Teknisi Elektronika, Maintenance Pabrik |
+| Teknik Ketenagalistrikan | Teknisi Listrik, Teknisi PLC |
 
-### ⚡ Teknik
-| Jurusan | Singkatan | Prospek Karir |
-|---------|-----------|---------------|
-| Teknik Pendingin & Tata Udara | **TPTU** | Teknisi AC, HVAC Engineer |
-| Teknik Instalasi Tenaga Listrik | **TITL** | Teknisi Listrik, Electrical Engineer |
+### 💻 Informatika
+| Program Keahlian | Prospek Karir |
+|---------|---------------|
+| Pemrograman Perangkat Lunak & Gim (**PPLG**) | Web/Mobile Developer, Game Developer |
+| Teknik Jaringan Komputer & Telekomunikasi (**TJKT**) | Network Engineer, IT Support |
+
+### 🔧 Mesin & Otomotif
+| Program Keahlian | Prospek Karir |
+|---------|---------------|
+| Teknik Otomotif | Mekanik, Teknisi Dealer |
+| Teknik Mesin | Operator CNC, Teknisi Maintenance |
+| Teknik Pengelasan & Fabrikasi Logam | Welder Bersertifikat, Fabrikator |
 
 > 💡 Kamu bisa pilih **maksimal 2 jurusan** saat mendaftar. Mau tahu lebih detail tentang jurusan tertentu? Tanyakan saja!`,
     },
@@ -174,7 +182,7 @@ Akses → **https://ppdb.jatengprov.go.id**
 - 🇬🇧 **English Club** — Debat & public speaking
 
 ### 🏆 Prestasi Terbaru
-- 🥇 Juara 1 LKS Provinsi Jawa Tengah (RPL) 2025
+- 🥇 Juara 1 LKS Tingkat Provinsi Jawa Tengah 2025
 - 🤖 Finalis Kompetisi Robotika Nasional 2025
 - 🔐 Juara 2 CTF BSSN 2025`,
     },
