@@ -21,6 +21,12 @@ import { ChatEmptyState, defaultSuggestions } from "@/components/chat/chat-empty
 import { ChatErrorState } from "@/components/chat/chat-error-state";
 import { Suggestion, Suggestions } from "@/components/ai-elements/suggestion";
 import { ChatMessages } from "@/components/chat/chat-messages";
+import { SpeechInput } from "@/components/ai-elements/speech-input";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 export default function ChatPage() {
   const [input, setInput] = useState("");
@@ -104,11 +110,33 @@ export default function ChatPage() {
                     Enter untuk kirim · Shift+Enter baris baru
                   </span>
                 </div>
-                <PromptInputSubmit
-                  status={status}
-                  onStop={stop}
-                  disabled={!input.trim() && !isStreaming}
-                />
+                <div className="flex items-center gap-1.5">
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span className="inline-flex">
+                        <SpeechInput
+                          type="button"
+                          lang="id-ID"
+                          disabled={isStreaming}
+                          onTranscriptionChange={(text) =>
+                            setInput((prev) => (prev ? `${prev} ${text}` : text))
+                          }
+                          aria-label="Tanya lewat suara"
+                          size="icon"
+                          className="size-8"
+                        />
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent side="top">
+                      Tanya lewat suara
+                    </TooltipContent>
+                  </Tooltip>
+                  <PromptInputSubmit
+                    status={status}
+                    onStop={stop}
+                    disabled={!input.trim() && !isStreaming}
+                  />
+                </div>
               </PromptInputFooter>
             </PromptInput>
           </div>
