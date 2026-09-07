@@ -31,11 +31,29 @@ import {
 export default function ChatPage() {
   const [input, setInput] = useState("");
 
-  const { messages, sendMessage, status, regenerate, stop, error } = useChat({
+  const {
+    messages,
+    sendMessage,
+    status,
+    regenerate,
+    stop,
+    error,
+    setMessages,
+  } = useChat({
     transport: new DefaultChatTransport({
       api: "/api/chat",
     }),
   });
+
+  const isStreaming = status === "streaming" || status === "submitted";
+
+  const handleReset = () => {
+    if (isStreaming) {
+      stop();
+    }
+    setMessages([]);
+    setInput("");
+  };
 
   const handleSubmit = (message: PromptInputMessage) => {
     if (message.text.trim()) {
@@ -44,8 +62,6 @@ export default function ChatPage() {
     }
   };
 
-  const isStreaming = status === "streaming" || status === "submitted";
-
   const handleSuggestionClick = (suggestion: string) => {
     if (isStreaming) return;
     sendMessage({ text: suggestion });
@@ -53,7 +69,7 @@ export default function ChatPage() {
 
   return (
     <div className="flex h-svh flex-col">
-      <ChatHeader />
+      <ChatHeader onReset={handleReset} hasMessages={messages.length > 0} />
 
       <main className="relative flex flex-1 flex-col overflow-hidden">
         <Conversation className="flex-1 w-full">
