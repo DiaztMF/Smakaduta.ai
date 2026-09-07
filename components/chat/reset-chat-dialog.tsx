@@ -51,11 +51,11 @@ export function ResetChatDialog({
     <Dialog open={open} onOpenChange={handleOpenChange}>
       {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
       <DialogContent className="sm:max-w-md">
-        <DialogHeader className="gap-3">
-          <div className="flex size-10 items-center justify-center rounded-full bg-destructive/10 text-destructive sm:size-11">
+        <DialogHeader className="flex-row items-start gap-3 text-left">
+          <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-destructive/10 text-destructive">
             <RotateCcw className="size-5" />
           </div>
-          <div className="flex flex-col gap-1">
+          <div className="flex min-w-0 flex-1 flex-col gap-1.5 pt-0.5">
             <DialogTitle className="text-base font-semibold sm:text-lg">
               Mulai Percakapan Baru?
             </DialogTitle>
