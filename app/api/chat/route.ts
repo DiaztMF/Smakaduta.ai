@@ -6,8 +6,39 @@ import { findCachedAnswer } from "@/lib/answer-cache";
 // Allow streaming responses up to 30 seconds
 export const maxDuration = 30;
 
-const openrouter = createOpenRouter({
-  apiKey: process.env.OPENROUTER_API_KEY,
+const baseURL = process.env.AI_BASE_URL || "https://9router.menoo.my.id/v1";
+const apiKey =
+  process.env.AI_API_KEY ||
+  process.env.OPENROUTER_API_KEY ||
+  "";
+
+const customFetch: typeof fetch = async (input, init) => {
+  const response = await fetch(input, init);
+  if (!response.body) return response;
+
+  const transformStream = new TransformStream({
+    transform(chunk, controller) {
+      const text = new TextDecoder().decode(chunk);
+      // Normalize prompt_tokens_details: {} to prevent Zod validation errors in @openrouter/ai-sdk-provider
+      const fixed = text.replace(
+        /"prompt_tokens_details"\s*:\s*\{\s*\}/g,
+        '"prompt_tokens_details":{"cached_tokens":0}'
+      );
+      controller.enqueue(new TextEncoder().encode(fixed));
+    },
+  });
+
+  return new Response(response.body.pipeThrough(transformStream), {
+    status: response.status,
+    statusText: response.statusText,
+    headers: response.headers,
+  });
+};
+
+const aiProvider = createOpenRouter({
+  baseURL,
+  apiKey,
+  fetch: customFetch,
 });
 
 // Base system prompt for Kak Duta persona
@@ -28,19 +59,31 @@ IDENTITAS:
 - Fungsi: Menjawab pertanyaan seputar PPDB 2026 dan informasi umum sekolah
 - Kepribadian: Ramah, sabar, informatif, profesional`;
 
-// Max output tokens capped at 8192 — Venice AI (OpenRouter free backend) has a hard limit of 16384.
-// Setting half that gives headroom for the system prompt + context in the request.
-// NOTE: AI SDK v5 renamed `maxTokens` → `maxOutputTokens`.
 const MAX_OUTPUT_TOKENS = 8192;
 
-// Ordered list of models for failover (S-04.1, S-04.2)
-const MODELS = [
-  "nvidia/nemotron-3-super-120b-a12b:free",
-  "meta-llama/llama-3.3-70b-instruct:free",
-  "google/gemini-2.5-flash-preview-05-20",
-] as const;
+// Ordered list of models for chat with failover (S-04.1, S-04.2)
+const ACTIVE_MODEL = process.env.AI_MODEL || "oc/big-pickle";
+const FALLBACK_MODELS = (
+  process.env.AI_FALLBACK_MODELS ||
+  "oc/mimo-v2.5-free,oc/ling-3.0-flash-fin-free,oc/muse-spark-1.3-contributor-free"
+)
+  .split(",")
+  .map((m) => m.trim())
+  .filter(Boolean);
+
+const MODELS = Array.from(new Set([ACTIVE_MODEL, ...FALLBACK_MODELS]));
 
 export async function POST(req: Request) {
+  if (MODELS.length === 0) {
+    return new Response(
+      JSON.stringify({
+        error:
+          "Model AI belum dikonfigurasi. Silakan tentukan nama model AI terlebih dahulu.",
+      }),
+      { status: 503, headers: { "Content-Type": "application/json" } }
+    );
+  }
+
   const { messages }: { messages: UIMessage[] } = await req.json();
 
   // Get the latest user message for RAG query
@@ -59,18 +102,40 @@ export async function POST(req: Request) {
       .join(" ");
 
     // ─── Cache Check: Bypass RAG untuk pertanyaan template ───────────
-    // Jika pertanyaan cocok dengan template yang sudah diketahui,
-    // stream jawaban langsung tanpa panggil embedding API + DB.
+    // Jika pertanyaan cocok dengan template yang sudah diketahui (preset suggestions),
+    // stream jawaban langsung dengan penanganan failover yang aman.
     const cached = findCachedAnswer(userText);
     if (cached) {
-      const result = streamText({
-        model: openrouter(MODELS[1]),
-        system: `${BASE_SYSTEM_PROMPT}\n\nJAWABAN REFERENSI (gunakan ini sebagai basis, boleh ditambah sapaan hangat):\n${cached.answer}`,
-        messages: await convertToModelMessages(messages),
-        maxOutputTokens: MAX_OUTPUT_TOKENS,
-      });
+      const cachedSystemPrompt = `${BASE_SYSTEM_PROMPT}\n\nJAWABAN REFERENSI (gunakan ini sebagai basis, boleh ditambah sapaan hangat):\n${cached.answer}`;
+      const convertedMessages = await convertToModelMessages(messages);
 
-      return result.toUIMessageStreamResponse();
+      for (const modelId of MODELS) {
+        try {
+          const result = streamText({
+            model: aiProvider(modelId),
+            system: cachedSystemPrompt,
+            messages: convertedMessages,
+            maxOutputTokens: MAX_OUTPUT_TOKENS,
+            onError({ error }) {
+              console.error(`Stream error on cached model ${modelId}:`, error);
+            },
+          });
+
+          return result.toUIMessageStreamResponse();
+        } catch (error: unknown) {
+          const errMsg = error instanceof Error ? error.message : String(error);
+          const isRateLimit =
+            errMsg.includes("429") || errMsg.toLowerCase().includes("rate limit");
+
+          if (isRateLimit) {
+            console.warn(`Rate limit hit on ${modelId} for cached answer, switching to next fallback model...`);
+            continue;
+          }
+
+          console.error(`Model ${modelId} failed for cached query, trying next...`, error);
+          continue;
+        }
+      }
     }
     // ──────────────────────────────────────────────────────────────────
 
@@ -84,33 +149,34 @@ export async function POST(req: Request) {
   }
 
   const systemPrompt = BASE_SYSTEM_PROMPT + contextPrompt;
-
   const modelMessages = await convertToModelMessages(messages);
 
   // Multi-model failover (S-04.1)
   let lastError: unknown;
+  let hitRateLimit = false;
 
   for (const modelId of MODELS) {
     try {
       const result = streamText({
-        model: openrouter(modelId),
+        model: aiProvider(modelId),
         system: systemPrompt,
         messages: modelMessages,
         maxOutputTokens: MAX_OUTPUT_TOKENS,
+        onError({ error }) {
+          console.error(`Stream error on model ${modelId}:`, error);
+        },
       });
 
       return result.toUIMessageStreamResponse();
     } catch (error: unknown) {
       const errMsg = error instanceof Error ? error.message : String(error);
-      const isRateLimit = errMsg.includes("429") || errMsg.toLowerCase().includes("rate limit");
+      const isRateLimit =
+        errMsg.includes("429") || errMsg.toLowerCase().includes("rate limit");
 
-      // On rate limit, stop trying other models — they'll likely fail too
       if (isRateLimit) {
-        console.warn(`Rate limit hit on ${modelId}, skipping remaining models.`);
-        return new Response(
-          JSON.stringify({ error: "Rate limit: 429 Too Many Requests" }),
-          { status: 429, headers: { "Content-Type": "application/json" } }
-        );
+        hitRateLimit = true;
+        console.warn(`Rate limit hit on ${modelId}, switching to next fallback model...`);
+        continue;
       }
 
       lastError = error;
@@ -121,6 +187,16 @@ export async function POST(req: Request) {
 
   // All models failed
   console.error("All models failed:", lastError);
+  if (hitRateLimit) {
+    return new Response(
+      JSON.stringify({
+        error:
+          "Layanan AI sedang sibuk (semua model mencapai limit rate). Silakan coba lagi beberapa saat lagi.",
+      }),
+      { status: 429, headers: { "Content-Type": "application/json" } }
+    );
+  }
+
   return new Response(
     JSON.stringify({
       error:

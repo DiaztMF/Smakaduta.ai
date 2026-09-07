@@ -1,8 +1,6 @@
 "use client";
 
-import { Suggestion, Suggestions } from "@/components/ai-elements/suggestion";
 import { Sparkles } from "lucide-react";
-import Image from "next/image";
 
 export const defaultSuggestions = [
   "Apa syarat daftar PPDB 2026?",
@@ -13,9 +11,7 @@ export const defaultSuggestions = [
   "Berapa kuota jalur prestasi?",
 ];
 
-interface ChatEmptyStateProps {}
-
-export function ChatEmptyState({}: ChatEmptyStateProps = {}) {
+export function ChatEmptyState() {
   return (
     <div className="flex flex-1 flex-col items-center justify-center gap-6 px-4 py-12">
       {/* Avatar */}

@@ -74,10 +74,9 @@ export async function POST(req: Request) {
           chunk.chunkIndex
         );
         processedCount++;
-      } catch (error: any) {
-        errors.push(
-          `Chunk ${chunk.chunkIndex}: ${error.message || "Unknown error"}`
-        );
+      } catch (error: unknown) {
+        const errMsg = error instanceof Error ? error.message : "Unknown error";
+        errors.push(`Chunk ${chunk.chunkIndex}: ${errMsg}`);
       }
     }
 
@@ -89,10 +88,11 @@ export async function POST(req: Request) {
       processedChunks: processedCount,
       errors: errors.length > 0 ? errors : undefined,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Upload processing failed:", error);
+    const errMsg = error instanceof Error ? error.message : "Upload processing failed";
     return NextResponse.json(
-      { error: error.message || "Upload processing failed" },
+      { error: errMsg },
       { status: 500 }
     );
   }

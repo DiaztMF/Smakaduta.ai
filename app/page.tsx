@@ -25,7 +25,7 @@ import { ChatMessages } from "@/components/chat/chat-messages";
 export default function ChatPage() {
   const [input, setInput] = useState("");
 
-  const { messages, sendMessage, status, regenerate, error } = useChat({
+  const { messages, sendMessage, status, regenerate, stop, error } = useChat({
     transport: new DefaultChatTransport({
       api: "/api/chat",
     }),
@@ -38,11 +38,12 @@ export default function ChatPage() {
     }
   };
 
+  const isStreaming = status === "streaming" || status === "submitted";
+
   const handleSuggestionClick = (suggestion: string) => {
+    if (isStreaming) return;
     sendMessage({ text: suggestion });
   };
-
-  const isStreaming = status === "streaming" || status === "submitted";
 
   return (
     <div className="flex h-svh flex-col">
@@ -79,6 +80,7 @@ export default function ChatPage() {
                       key={suggestion}
                       onClick={handleSuggestionClick}
                       suggestion={suggestion}
+                      disabled={isStreaming}
                     />
                   ))}
                 </Suggestions>
@@ -104,6 +106,7 @@ export default function ChatPage() {
                 </div>
                 <PromptInputSubmit
                   status={status}
+                  onStop={stop}
                   disabled={!input.trim() && !isStreaming}
                 />
               </PromptInputFooter>

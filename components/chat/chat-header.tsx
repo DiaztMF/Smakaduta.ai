@@ -1,15 +1,16 @@
 "use client";
 
-import { Moon, Sun, } from "lucide-react";
+import { Moon, Sun } from "lucide-react";
 import { useEffect, useState } from "react";
-import { Button } from "../ui/button";
 
 export function ChatHeader() {
   const [isDark, setIsDark] = useState(false);
 
   useEffect(() => {
-    const stored = localStorage.getItem("smakaduta-theme");
-    if (stored === "dark") {
+    const isDarkTheme =
+      localStorage.getItem("smakaduta-theme") === "dark" ||
+      document.documentElement.classList.contains("dark");
+    if (isDarkTheme) {
       document.documentElement.classList.add("dark");
       setIsDark(true);
     }

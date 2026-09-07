@@ -25,10 +25,11 @@ export async function POST(req: Request) {
       message:
         "pgvector extension enabled. Run `pnpm db:push` to sync the schema.",
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Database initialization failed:", error);
+    const errMsg = error instanceof Error ? error.message : "Database initialization failed";
     return NextResponse.json(
-      { error: error.message || "Database initialization failed" },
+      { error: errMsg },
       { status: 500 }
     );
   }

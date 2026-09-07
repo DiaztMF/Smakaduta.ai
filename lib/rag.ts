@@ -104,7 +104,7 @@ export async function storeChunkWithEmbedding(
   sourceType: string,
   chunkIndex: number
 ): Promise<void> {
-  const embedding = await generateEmbedding(content);
+  const embedding = await generateEmbedding(content, "passage");
   const embeddingStr = `[${embedding.join(",")}]`;
 
   await db.execute(sql`

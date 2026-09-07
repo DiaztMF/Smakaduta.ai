@@ -16,10 +16,11 @@ export async function GET(req: Request) {
   try {
     const sources = await listSources();
     return NextResponse.json({ sources });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Failed to list resources:", error);
+    const errMsg = error instanceof Error ? error.message : "Failed to list resources";
     return NextResponse.json(
-      { error: error.message || "Failed to list resources" },
+      { error: errMsg },
       { status: 500 }
     );
   }
@@ -49,10 +50,11 @@ export async function DELETE(req: Request) {
       success: true,
       message: `Deleted all chunks from "${sourceName}"`,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Failed to delete resource:", error);
+    const errMsg = error instanceof Error ? error.message : "Failed to delete resource";
     return NextResponse.json(
-      { error: error.message || "Failed to delete resource" },
+      { error: errMsg },
       { status: 500 }
     );
   }

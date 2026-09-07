@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useRef } from "react";
 import {
   Upload,
   FileText,
@@ -35,6 +35,7 @@ export default function AdminPage() {
   const [sourceName, setSourceName] = useState("");
   const [textContent, setTextContent] = useState("");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -67,6 +68,14 @@ export default function AdminPage() {
     e.preventDefault();
     if (!sourceName.trim()) return;
 
+    if (!selectedFile && !textContent.trim()) {
+      setUploadStatus({
+        type: "error",
+        message: "Pilih file PDF atau masukkan teks manual terlebih dahulu.",
+      });
+      return;
+    }
+
     setUploadStatus({ type: "loading", message: "Memproses dokumen..." });
 
     const formData = new FormData();
@@ -95,6 +104,9 @@ export default function AdminPage() {
         setSourceName("");
         setTextContent("");
         setSelectedFile(null);
+        if (fileInputRef.current) {
+          fileInputRef.current.value = "";
+        }
         fetchSources();
       } else {
         setUploadStatus({
@@ -310,6 +322,7 @@ export default function AdminPage() {
                   )}
                   <input
                     id="file-upload"
+                    ref={fileInputRef}
                     type="file"
                     accept=".pdf"
                     onChange={(e) =>
@@ -344,7 +357,11 @@ export default function AdminPage() {
 
               <button
                 type="submit"
-                disabled={uploadStatus?.type === "loading"}
+                disabled={
+                  uploadStatus?.type === "loading" ||
+                  (!selectedFile && !textContent.trim()) ||
+                  !sourceName.trim()
+                }
                 className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {uploadStatus?.type === "loading" ? (
