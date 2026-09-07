@@ -96,7 +96,7 @@ export default function ChatPage() {
         <div className="mx-auto w-full max-w-3xl px-4 pb-4 pt-2">
             {messages.length === 0 && (
               <div className="mb-4 flex w-full justify-center">
-                <Suggestions className="!w-auto !flex-wrap justify-center overflow-visible">
+                <Suggestions className="!w-auto !flex-wrap justify-center overflow-visible [&_button:nth-child(n+4)]:hidden sm:[&_button:nth-child(n+4)]:inline-flex">
                   {defaultSuggestions.map((suggestion) => (
                     <Suggestion
                       key={suggestion}
@@ -121,7 +121,7 @@ export default function ChatPage() {
                 />
               </PromptInputBody>
               <PromptInputFooter>
-                <div className="flex items-center gap-2">
+                <div className="hidden items-center gap-2 sm:flex">
                   <span className="text-[11px] text-muted-foreground/50">
                     Enter untuk kirim · Shift+Enter baris baru
                   </span>
