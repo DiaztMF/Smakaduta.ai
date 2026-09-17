@@ -1,36 +1,81 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Smakaduta.ai
 
-## Getting Started
+An AI-powered institutional assistant and Retrieval-Augmented Generation (RAG) platform tailored for SMK Negeri 2 Surakarta, providing automated PPDB admissions support and academic guidance.
 
-First, run the development server:
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Next.js](https://img.shields.io/badge/Next.js-15-black)](https://nextjs.org/)
+[![Drizzle ORM](https://img.shields.io/badge/Drizzle-ORM-orange)](https://orm.drizzle.team/)
+[![Neon Postgres](https://img.shields.io/badge/Neon-Postgres-green)](https://neon.tech/)
+
+## Installation
+
+Clone the repository and install dependencies using pnpm:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone https://github.com/DiaztMF/Smakaduta.ai.git
+cd Smakaduta.ai
+pnpm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Quick Start
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+1. Set up your environment variables in `.env.local`:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+DATABASE_URL="postgresql://user:password@endpoint.neon.tech/neondb?sslmode=require"
+GEMINI_API_KEY="your-gemini-api-key"
+```
 
-## Learn More
+2. Initialize database schema and start the local development server:
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+pnpm db:push
+pnpm dev
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Open [http://localhost:3000](http://localhost:3000) to view the chatbot interface.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## What is Smakaduta.ai?
 
-## Deploy on Vercel
+`Smakaduta.ai` is a specialized institutional web platform developed for SMKN 2 Surakarta (Stemsa). It addresses high-volume inquiries during the Student Admission Selection (PPDB) cycle and serves as an interactive curriculum assistant via RAG. Prospective students and guardians receive authoritative school guidelines, major competencies, and admissions schedules instantly.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Why Smakaduta.ai?
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Manual admissions counseling via WhatsApp groups and walk-in desks overwhelms school administrative staff with repetitive inquiries. `Smakaduta.ai` grounds answers strictly in official school regulatory documents, eliminating hallucinations while providing 24/7 self-service support.
+
+## API / Routes
+
+### Route Handlers
+- `POST /api/chat`: Ingests user questions, queries semantic context from school documents, and streams generated responses.
+- `GET /api/faq`: Retrieves curated, high-frequency question clusters for rapid access.
+
+## Examples
+
+Querying the school knowledge base via the conversational API:
+
+```typescript
+export async function sendStudentInquiry(message: string, history: Array<{ role: string; content: string }>) {
+  const response = await fetch('/api/chat', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ message, history }),
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to retrieve answer from Smakaduta AI assistant');
+  }
+
+  return await response.json();
+}
+```
+
+## Architecture & Development Guides
+
+- Frontend Shell: Next.js 15 App Router with React 19, Tailwind CSS, and shadcn/ui.
+- RAG & Document Store: Vector search over official SMKN 2 Surakarta policy PDFs and documentation.
+- Database: Drizzle ORM connecting to Neon Serverless Postgres.
+- AI Gateway: Google Gemini API integration with strict system guardrails for educational compliance.
+
+## License
+
+MIT License. See [LICENSE](LICENSE) for full details.
