@@ -1,4 +1,10 @@
-import { streamText, UIMessage, convertToModelMessages } from "ai";
+import {
+  streamText,
+  UIMessage,
+  convertToModelMessages,
+  createUIMessageStream,
+  createUIMessageStreamResponse,
+} from "ai";
 import { createOpenRouter } from "@openrouter/ai-sdk-provider";
 import { findRelevantContent, buildContextPrompt } from "@/lib/rag";
 import { findCachedAnswer } from "@/lib/answer-cache";
@@ -16,15 +22,103 @@ const customFetch: typeof fetch = async (input, init) => {
   const response = await fetch(input, init);
   if (!response.body) return response;
 
-  const transformStream = new TransformStream({
-    transform(chunk, controller) {
-      const text = new TextDecoder().decode(chunk);
-      // Normalize prompt_tokens_details: {} to prevent Zod validation errors in @openrouter/ai-sdk-provider
-      const fixed = text.replace(
+  const decoder = new TextDecoder();
+  const encoder = new TextEncoder();
+  let buffer = "";
+
+  const fixChunkObject = (obj: unknown): unknown => {
+    if (obj && typeof obj === "object") {
+      const record = obj as Record<string, unknown>;
+      // Fix choices[].delta and choices[].message
+      if (Array.isArray(record.choices)) {
+        for (const choice of record.choices as Record<string, unknown>[]) {
+          const delta = choice.delta as Record<string, unknown> | null | undefined;
+          if (delta && typeof delta === "object") {
+            if (delta.role === null) {
+              delta.role = "assistant";
+            }
+            if ("reasoning_content" in delta) {
+              if (delta.reasoning == null) {
+                delta.reasoning = delta.reasoning_content as unknown;
+              }
+              delete delta.reasoning_content;
+            }
+          }
+          const message = choice.message as Record<string, unknown> | null | undefined;
+          if (message && typeof message === "object") {
+            if (message.role === null) {
+              message.role = "assistant";
+            }
+            if ("reasoning_content" in message) {
+              if (message.reasoning == null) {
+                message.reasoning = message.reasoning_content as unknown;
+              }
+              delete message.reasoning_content;
+            }
+          }
+        }
+      }
+      // Fix usage.prompt_tokens_details: {} -> {"cached_tokens":0}
+      const usage = record.usage as Record<string, unknown> | undefined;
+      if (
+        usage &&
+        typeof usage.prompt_tokens_details === "object" &&
+        usage.prompt_tokens_details !== null &&
+        Object.keys(usage.prompt_tokens_details as object).length === 0
+      ) {
+        usage.prompt_tokens_details = { cached_tokens: 0 };
+      }
+    }
+    return obj;
+  };
+
+  const fallbackStringFix = (text: string) =>
+    text
+      .replace(
         /"prompt_tokens_details"\s*:\s*\{\s*\}/g,
         '"prompt_tokens_details":{"cached_tokens":0}'
-      );
-      controller.enqueue(new TextEncoder().encode(fixed));
+      )
+      .replace(/"role"\s*:\s*null/g, '"role":"assistant"')
+      .replace(/"reasoning_content"\s*:/g, '"reasoning":');
+
+  const processLine = (line: string): string => {
+    if (line.startsWith("data: ")) {
+      const jsonStr = line.slice(6);
+      const trimmed = jsonStr.trim();
+      if (trimmed === "" || trimmed === "[DONE]") {
+        return line;
+      }
+      try {
+        const obj = JSON.parse(jsonStr) as unknown;
+        fixChunkObject(obj);
+        return "data: " + JSON.stringify(obj);
+      } catch {
+        return fallbackStringFix(line);
+      }
+    }
+    return fallbackStringFix(line);
+  };
+
+  const transformStream = new TransformStream<Uint8Array, Uint8Array>({
+    transform(chunk, controller) {
+      const text = decoder.decode(chunk, { stream: true });
+      buffer += text;
+      const lines = buffer.split("\n");
+      buffer = lines.pop() ?? "";
+      for (const line of lines) {
+        const out = processLine(line);
+        controller.enqueue(encoder.encode(out + "\n"));
+      }
+    },
+    flush(controller) {
+      // Flush decoder remainder
+      const tail = decoder.decode();
+      if (tail) buffer += tail;
+      if (buffer) {
+        const out = processLine(buffer);
+        controller.enqueue(encoder.encode(out));
+        buffer = "";
+      }
     },
   });
 
@@ -62,10 +156,9 @@ IDENTITAS:
 const MAX_OUTPUT_TOKENS = 8192;
 
 // Ordered list of models for chat with failover (S-04.1, S-04.2)
-const ACTIVE_MODEL = process.env.AI_MODEL || "oc/big-pickle";
+const ACTIVE_MODEL = process.env.AI_MODEL || "kc/kilo-auto/free";
 const FALLBACK_MODELS = (
-  process.env.AI_FALLBACK_MODELS ||
-  "oc/mimo-v2.5-free,oc/ling-3.0-flash-fin-free,oc/muse-spark-1.3-contributor-free"
+  process.env.AI_FALLBACK_MODELS || "kc/openrouter/free"
 )
   .split(",")
   .map((m) => m.trim())
@@ -73,7 +166,57 @@ const FALLBACK_MODELS = (
 
 const MODELS = Array.from(new Set([ACTIVE_MODEL, ...FALLBACK_MODELS]));
 
+const RATE_LIMIT_WINDOW_MS = 60_000;
+const RATE_LIMIT_MAX = 30;
+const rateBuckets = new Map<string, number[]>();
+
+function getClientIp(req: Request): string {
+  const forwarded = req.headers.get("x-forwarded-for");
+  if (forwarded) return forwarded.split(",")[0].trim();
+  const realIp = req.headers.get("x-real-ip");
+  if (realIp) return realIp.trim();
+  return "unknown";
+}
+
+function isRateLimited(ip: string): boolean {
+  const now = Date.now();
+  const hits = (rateBuckets.get(ip) ?? []).filter((t) => now - t < RATE_LIMIT_WINDOW_MS);
+  if (hits.length >= RATE_LIMIT_MAX) {
+    rateBuckets.set(ip, hits);
+    return true;
+  }
+  hits.push(now);
+  rateBuckets.set(ip, hits);
+  return false;
+}
+
+function streamStaticAnswer(answer: string, sourceName: string): Response {
+  const text = `Halo Kak! Senang bisa membantu 😊\n\n${answer}\n\n*Sumber: ${sourceName}*`;
+  const stream = createUIMessageStream({
+    execute: ({ writer }) => {
+      const id = "cached-answer";
+      writer.write({ type: "start" });
+      writer.write({ type: "text-start", id });
+      writer.write({ type: "text-delta", id, delta: text });
+      writer.write({ type: "text-end", id });
+      writer.write({ type: "finish" });
+    },
+    onError: (error) => (error instanceof Error ? error.message : String(error)),
+  });
+  return createUIMessageStreamResponse({ stream });
+}
+
 export async function POST(req: Request) {
+  if (isRateLimited(getClientIp(req))) {
+    return Response.json(
+      {
+        error:
+          "Terlalu banyak permintaan. Tunggu sebentar lalu coba lagi ya.",
+      },
+      { status: 429 }
+    );
+  }
+
   if (MODELS.length === 0) {
     return new Response(
       JSON.stringify({
@@ -84,7 +227,20 @@ export async function POST(req: Request) {
     );
   }
 
-  const { messages }: { messages: UIMessage[] } = await req.json();
+  let messages: UIMessage[];
+  try {
+    const body = await req.json();
+    messages = body.messages;
+  } catch {
+    return Response.json({ error: "Body harus JSON valid." }, { status: 400 });
+  }
+
+  if (!Array.isArray(messages) || messages.length === 0) {
+    return Response.json(
+      { error: "Pesan tidak boleh kosong. Tulis pertanyaan dulu ya." },
+      { status: 400 }
+    );
+  }
 
   // Get the latest user message for RAG query
   const lastUserMessage = [...messages]
@@ -102,40 +258,12 @@ export async function POST(req: Request) {
       .join(" ");
 
     // ─── Cache Check: Bypass RAG untuk pertanyaan template ───────────
-    // Jika pertanyaan cocok dengan template yang sudah diketahui (preset suggestions),
-    // stream jawaban langsung dengan penanganan failover yang aman.
+    // Cached answer disajikan statis tanpa panggil LLM: 0 kuota, 0 latency,
+    // tetap jalan saat semua model outage. Model AI hanya dipakai untuk
+    // pertanyaan non-template di bawah.
     const cached = findCachedAnswer(userText);
     if (cached) {
-      const cachedSystemPrompt = `${BASE_SYSTEM_PROMPT}\n\nJAWABAN REFERENSI (gunakan ini sebagai basis, boleh ditambah sapaan hangat):\n${cached.answer}`;
-      const convertedMessages = await convertToModelMessages(messages);
-
-      for (const modelId of MODELS) {
-        try {
-          const result = streamText({
-            model: aiProvider(modelId),
-            system: cachedSystemPrompt,
-            messages: convertedMessages,
-            maxOutputTokens: MAX_OUTPUT_TOKENS,
-            onError({ error }) {
-              console.error(`Stream error on cached model ${modelId}:`, error);
-            },
-          });
-
-          return result.toUIMessageStreamResponse();
-        } catch (error: unknown) {
-          const errMsg = error instanceof Error ? error.message : String(error);
-          const isRateLimit =
-            errMsg.includes("429") || errMsg.toLowerCase().includes("rate limit");
-
-          if (isRateLimit) {
-            console.warn(`Rate limit hit on ${modelId} for cached answer, switching to next fallback model...`);
-            continue;
-          }
-
-          console.error(`Model ${modelId} failed for cached query, trying next...`, error);
-          continue;
-        }
-      }
+      return streamStaticAnswer(cached.answer, cached.sourceName);
     }
     // ──────────────────────────────────────────────────────────────────
 
