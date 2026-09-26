@@ -16,7 +16,15 @@ function detectErrorType(error: unknown): ErrorType {
   if (msg.includes("429") || msg.includes("rate limit") || msg.includes("too many requests")) {
     return "rate_limit";
   }
-  if (msg.includes("503") || msg.includes("semua model") || msg.includes("all models")) {
+  if (
+    msg.includes("503") ||
+    msg.includes("semua model") ||
+    msg.includes("all models") ||
+    msg.includes("tidak tersedia") ||
+    msg.includes("403") ||
+    msg.includes("forbidden") ||
+    msg.includes("free tier")
+  ) {
     return "all_models_failed";
   }
   if (msg.includes("fetch") || msg.includes("network") || msg.includes("failed to fetch")) {

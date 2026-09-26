@@ -95,8 +95,8 @@ export default function ChatPage() {
         {/* Prompt Input */}
         <div className="mx-auto w-full max-w-3xl px-4 pb-4 pt-2">
             {messages.length === 0 && (
-              <div className="mb-4 hidden w-full justify-center sm:flex">
-                <Suggestions className="!w-auto !flex-wrap justify-center overflow-visible">
+              <div className="mb-4 flex w-full justify-center">
+                <Suggestions className="justify-start sm:!w-auto sm:!flex-wrap sm:justify-center">
                   {defaultSuggestions.map((suggestion) => (
                     <Suggestion
                       key={suggestion}

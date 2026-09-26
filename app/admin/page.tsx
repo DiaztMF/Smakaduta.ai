@@ -24,6 +24,8 @@ interface Source {
 export default function AdminPage() {
   const [secret, setSecret] = useState("");
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [loginError, setLoginError] = useState<string | null>(null);
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [sources, setSources] = useState<Source[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [uploadStatus, setUploadStatus] = useState<{
@@ -37,28 +39,48 @@ export default function AdminPage() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const authHeaders = (pwd: string): HeadersInit => ({
+    Authorization: `Bearer ${pwd}`,
+  });
+
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (secret.trim()) {
+    const pwd = secret.trim();
+    if (!pwd || isLoggingIn) return;
+    setIsLoggingIn(true);
+    setLoginError(null);
+    const ok = await fetchSources(pwd);
+    setIsLoggingIn(false);
+    if (ok) {
       setIsAuthenticated(true);
-      fetchSources();
+    } else {
+      setLoginError("Password salah. Coba lagi ya.");
     }
   };
 
-  const fetchSources = async () => {
+  const fetchSources = async (pwd: string = secret): Promise<boolean> => {
     setIsLoading(true);
     try {
-      const res = await fetch(
-        `/api/admin/resources?secret=${encodeURIComponent(secret)}`
-      );
-      const data = await res.json();
+      const res = await fetch("/api/admin/resources", {
+        headers: authHeaders(pwd),
+      });
+      const data = await res.json().catch(() => ({}));
       if (res.ok) {
         setSources(data.sources || []);
-      } else {
-        setIsAuthenticated(false);
+        return true;
       }
+      if (res.status === 401) {
+        setIsAuthenticated(false);
+        return false;
+      }
+      setUploadStatus({
+        type: "error",
+        message: data.error || "Gagal memuat basis pengetahuan.",
+      });
+      return isAuthenticated;
     } catch {
-      console.error("Failed to fetch sources");
+      setUploadStatus({ type: "error", message: "Koneksi gagal." });
+      return isAuthenticated;
     } finally {
       setIsLoading(false);
     }
@@ -79,7 +101,6 @@ export default function AdminPage() {
     setUploadStatus({ type: "loading", message: "Memproses dokumen..." });
 
     const formData = new FormData();
-    formData.append("secret", secret);
     formData.append("sourceName", sourceName);
 
     if (selectedFile) {
@@ -92,6 +113,7 @@ export default function AdminPage() {
     try {
       const res = await fetch("/api/admin/upload", {
         method: "POST",
+        headers: authHeaders(secret),
         body: formData,
       });
       const data = await res.json();
@@ -125,8 +147,8 @@ export default function AdminPage() {
     try {
       const res = await fetch("/api/admin/resources", {
         method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ secret, sourceName }),
+        headers: { "Content-Type": "application/json", ...authHeaders(secret) },
+        body: JSON.stringify({ sourceName }),
       });
 
       if (res.ok) {
@@ -142,8 +164,8 @@ export default function AdminPage() {
     try {
       const res = await fetch("/api/admin/init-db", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ secret }),
+        headers: { "Content-Type": "application/json", ...authHeaders(secret) },
+        body: JSON.stringify({}),
       });
       const data = await res.json();
 
@@ -191,19 +213,33 @@ export default function AdminPage() {
             <input
               id="admin-secret"
               type="password"
+              autoComplete="current-password"
               value={secret}
-              onChange={(e) => setSecret(e.target.value)}
+              onChange={(e) => {
+                setSecret(e.target.value);
+                if (loginError) setLoginError(null);
+              }}
               placeholder="Masukkan password..."
               className="w-full rounded-lg border border-border bg-background px-4 py-2.5 text-sm transition-colors focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
               required
             />
+            {loginError && (
+              <p role="alert" className="text-sm text-red-600 dark:text-red-400">
+                {loginError}
+              </p>
+            )}
           </div>
 
           <button
             type="submit"
-            className="w-full cursor-pointer rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90"
+            disabled={isLoggingIn}
+            className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            Masuk
+            {isLoggingIn ? (
+              <Loader2 className="size-4 animate-spin" />
+            ) : (
+              "Masuk"
+            )}
           </button>
         </form>
       </div>
@@ -381,7 +417,9 @@ export default function AdminPage() {
                 Basis Pengetahuan
               </h2>
               <button
-                onClick={fetchSources}
+                onClick={() => {
+                  void fetchSources();
+                }}
                 className="flex cursor-pointer items-center gap-1.5 rounded-lg border border-border/50 px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
               >
                 Refresh
