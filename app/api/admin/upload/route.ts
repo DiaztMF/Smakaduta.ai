@@ -1,7 +1,12 @@
 import { NextResponse } from "next/server";
 import { chunkText } from "@/lib/chunking";
 import { storeChunkWithEmbedding } from "@/lib/rag";
-import { PDFParse } from "pdf-parse";
+import {
+  getBearerSecret,
+  isValidAdminSecret,
+  unauthorizedResponse,
+  misconfiguredResponse,
+} from "@/lib/admin-auth";
 
 /**
  * POST /api/admin/upload
@@ -18,13 +23,22 @@ import { PDFParse } from "pdf-parse";
  * 4. Store in Neon DB with HNSW index
  */
 export async function POST(req: Request) {
-  // Auth check
-  const formData = await req.formData();
-  const secret = formData.get("secret") as string;
+  if (!process.env.ADMIN_SECRET) return misconfiguredResponse();
 
-  if (secret !== process.env.ADMIN_SECRET) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  // formData() throws on non-multipart bodies -> JSON 400, never 500 HTML.
+  let formData: FormData;
+  try {
+    formData = await req.formData();
+  } catch {
+    return NextResponse.json(
+      { error: "Body harus multipart/form-data." },
+      { status: 400 }
+    );
   }
+
+  // Auth: Bearer header utama, field form sebagai fallback kompatibilitas.
+  const secret = getBearerSecret(req) ?? (formData.get("secret") as string | null);
+  if (!isValidAdminSecret(secret)) return unauthorizedResponse();
 
   const sourceName = (formData.get("sourceName") as string) || "Unnamed Source";
   const textContent = formData.get("text") as string | null;
@@ -37,6 +51,9 @@ export async function POST(req: Request) {
     // Extract text from PDF or use raw text input
     if (file && file.size > 0) {
       const buffer = Buffer.from(await file.arrayBuffer());
+      // Lazy import: modul pdf-parse v2 crash saat load di Edge/route context,
+      // yang dulu bikin route ini 500 HTML sebelum sempat cek auth.
+      const { PDFParse } = await import("pdf-parse");
       const parser = new PDFParse({ data: new Uint8Array(buffer) });
       const pdfData = await parser.getText();
       fullText = pdfData.text;

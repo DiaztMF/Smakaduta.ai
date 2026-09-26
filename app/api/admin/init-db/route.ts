@@ -1,6 +1,12 @@
 import { db } from "@/lib/db";
 import { sql } from "drizzle-orm";
 import { NextResponse } from "next/server";
+import {
+  getBearerSecret,
+  isValidAdminSecret,
+  unauthorizedResponse,
+  misconfiguredResponse,
+} from "@/lib/admin-auth";
 
 /**
  * POST /api/admin/init-db
@@ -10,11 +16,17 @@ import { NextResponse } from "next/server";
  * Protected by ADMIN_SECRET.
  */
 export async function POST(req: Request) {
-  // Auth check
-  const { secret } = await req.json();
-  if (secret !== process.env.ADMIN_SECRET) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!process.env.ADMIN_SECRET) return misconfiguredResponse();
+
+  let body: { secret?: string };
+  try {
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ error: "Body harus JSON valid." }, { status: 400 });
   }
+
+  const secret = getBearerSecret(req) ?? body.secret;
+  if (!isValidAdminSecret(secret)) return unauthorizedResponse();
 
   try {
     // Enable pgvector extension (must be done before schema push)

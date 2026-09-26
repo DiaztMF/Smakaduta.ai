@@ -1,17 +1,20 @@
 import { NextResponse } from "next/server";
 import { listSources, deleteSource } from "@/lib/rag";
+import {
+  getBearerSecret,
+  isValidAdminSecret,
+  unauthorizedResponse,
+  misconfiguredResponse,
+} from "@/lib/admin-auth";
 
 /**
  * GET /api/admin/resources
  * List all sources in the knowledge base.
+ * Auth via Authorization: Bearer <ADMIN_SECRET> header.
  */
 export async function GET(req: Request) {
-  const url = new URL(req.url);
-  const secret = url.searchParams.get("secret");
-
-  if (secret !== process.env.ADMIN_SECRET) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  if (!process.env.ADMIN_SECRET) return misconfiguredResponse();
+  if (!isValidAdminSecret(getBearerSecret(req))) return unauthorizedResponse();
 
   try {
     const sources = await listSources();
@@ -31,11 +34,19 @@ export async function GET(req: Request) {
  * Delete all chunks for a specific source.
  */
 export async function DELETE(req: Request) {
-  const { secret, sourceName } = await req.json();
+  if (!process.env.ADMIN_SECRET) return misconfiguredResponse();
 
-  if (secret !== process.env.ADMIN_SECRET) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  let body: { secret?: string; sourceName?: string };
+  try {
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ error: "Body harus JSON valid." }, { status: 400 });
   }
+
+  const secret = getBearerSecret(req) ?? body.secret;
+  if (!isValidAdminSecret(secret)) return unauthorizedResponse();
+
+  const { sourceName } = body;
 
   if (!sourceName) {
     return NextResponse.json(
