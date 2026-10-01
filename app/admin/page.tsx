@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useMemo } from "react";
 import {
   Upload,
   FileText,
@@ -12,6 +12,7 @@ import {
   CheckCircle,
   AlertCircle,
   File,
+  AlertTriangle,
 } from "lucide-react";
 
 interface Source {
@@ -38,6 +39,14 @@ export default function AdminPage() {
   const [textContent, setTextContent] = useState("");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  const isExistingSource = useMemo(() => {
+    const trimmed = sourceName.trim().toLowerCase();
+    if (!trimmed) return false;
+    return sources.some(
+      (s) => s.sourceName.trim().toLowerCase() === trimmed
+    );
+  }, [sourceName, sources]);
 
   const authHeaders = (pwd: string): HeadersInit => ({
     Authorization: `Bearer ${pwd}`,
@@ -119,9 +128,13 @@ export default function AdminPage() {
       const data = await res.json();
 
       if (res.ok) {
+        const msg =
+          data.action === "replaced"
+            ? `Berhasil memperbarui ${data.sourceName}! Menimpa ${data.deletedOldChunks} chunk lama dengan ${data.processedChunks} chunk baru.`
+            : `Berhasil menambahkan dokumen ${data.sourceName} (${data.processedChunks} chunk).`;
         setUploadStatus({
           type: "success",
-          message: `Berhasil! ${data.processedChunks}/${data.totalChunks} chunks diproses dari "${data.sourceName}"`,
+          message: msg,
         });
         setSourceName("");
         setTextContent("");
@@ -317,9 +330,17 @@ export default function AdminPage() {
             >
               {/* Source Name */}
               <div className="space-y-1.5">
-                <label htmlFor="source-name" className="text-sm font-medium">
-                  Nama Sumber
-                </label>
+                <div className="flex items-center justify-between gap-2">
+                  <label htmlFor="source-name" className="text-sm font-medium">
+                    Nama Sumber
+                  </label>
+                  {isExistingSource && (
+                    <span className="inline-flex items-center gap-1 rounded-md border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-[11px] font-medium text-amber-600 dark:text-amber-400">
+                      <AlertTriangle className="size-3" />
+                      Akan Menimpa Dokumen
+                    </span>
+                  )}
+                </div>
                 <input
                   id="source-name"
                   type="text"
@@ -329,6 +350,14 @@ export default function AdminPage() {
                   className="w-full rounded-lg border border-border bg-background px-4 py-2.5 text-sm transition-colors focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
                   required
                 />
+                {isExistingSource && (
+                  <div className="flex items-start gap-2 rounded-lg border border-amber-500/20 bg-amber-50/50 p-2.5 text-xs text-amber-700 dark:bg-amber-950/20 dark:text-amber-300">
+                    <AlertTriangle className="size-4 shrink-0 text-amber-600 dark:text-amber-400 mt-0.5" />
+                    <span>
+                      Dokumen dengan nama ini sudah ada. Mengunggah akan menimpa & memperbarui seluruh chunk dokumen ini secara atomik.
+                    </span>
+                  </div>
+                )}
               </div>
 
               {/* PDF Upload */}
