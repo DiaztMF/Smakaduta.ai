@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { chunkText } from "@/lib/chunking";
-import { storeChunkWithEmbedding } from "@/lib/rag";
+import { replaceSourceChunks, type PreparedChunk } from "@/lib/rag";
+import { batchGenerateEmbeddings } from "@/lib/embeddings";
 import {
   getBearerSecret,
   isValidAdminSecret,
@@ -78,32 +79,41 @@ export async function POST(req: Request) {
       );
     }
 
-    // Process each chunk: embed + store (PRD S-02.4)
-    let processedCount = 0;
-    const errors: string[] = [];
+    // Sanitize chunk text (remove null bytes)
+    const sanitizedContents = chunks.map((chunk) =>
+      chunk.content.replace(/\u0000/g, "")
+    );
 
-    for (const chunk of chunks) {
-      try {
-        await storeChunkWithEmbedding(
-          chunk.content,
-          sourceName,
-          sourceType,
-          chunk.chunkIndex
-        );
-        processedCount++;
-      } catch (error: unknown) {
-        const errMsg = error instanceof Error ? error.message : "Unknown error";
-        errors.push(`Chunk ${chunk.chunkIndex}: ${errMsg}`);
-      }
-    }
+    // Generate embeddings in throttled batches with retry logic
+    const embeddings = await batchGenerateEmbeddings(
+      sanitizedContents,
+      "passage",
+      3,
+      200
+    );
+
+    const preparedChunks: PreparedChunk[] = chunks.map((chunk, index) => ({
+      content: sanitizedContents[index],
+      sourceName,
+      sourceType,
+      chunkIndex: chunk.chunkIndex,
+      embedding: embeddings[index],
+    }));
+
+    // Atomically replace all chunks for this source
+    const { deletedCount, insertedCount } = await replaceSourceChunks(
+      sourceName,
+      preparedChunks
+    );
 
     return NextResponse.json({
       success: true,
+      action: deletedCount > 0 ? "replaced" : "created",
       sourceName,
       sourceType,
       totalChunks: chunks.length,
-      processedChunks: processedCount,
-      errors: errors.length > 0 ? errors : undefined,
+      processedChunks: insertedCount,
+      deletedOldChunks: deletedCount,
     });
   } catch (error: unknown) {
     console.error("Upload processing failed:", error);
