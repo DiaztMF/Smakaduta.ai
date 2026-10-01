@@ -156,3 +156,47 @@ export async function listSources(): Promise<
 export async function deleteSource(sourceName: string): Promise<void> {
   await db.delete(resources).where(eq(resources.sourceName, sourceName));
 }
+
+export interface PreparedChunk {
+  content: string;
+  sourceName: string;
+  sourceType: string;
+  chunkIndex: number;
+  embedding: number[];
+}
+
+/**
+ * Replace all chunks of a source atomically in a single Neon DB transaction.
+ * Ensures zero downtime and zero partial states.
+ */
+export async function replaceSourceChunks(
+  sourceName: string,
+  newChunks: PreparedChunk[]
+): Promise<{ deletedCount: number; insertedCount: number }> {
+  // Query existing chunk count
+  const existingRecords = await db
+    .select({ count: count(resources.id) })
+    .from(resources)
+    .where(eq(resources.sourceName, sourceName));
+  const oldCount = Number(existingRecords[0]?.count ?? 0);
+
+  // Execute deletion and batch insertion inside transaction
+  await db.transaction(async (tx) => {
+    // 1. Delete old chunks
+    await tx.delete(resources).where(eq(resources.sourceName, sourceName));
+
+    // 2. Insert new chunks in batch
+    for (const chunk of newChunks) {
+      const embeddingStr = `[${chunk.embedding.join(",")}]`;
+      await tx.execute(sql`
+        INSERT INTO resources (content, source_name, source_type, chunk_index, embedding, updated_at)
+        VALUES (${chunk.content}, ${chunk.sourceName}, ${chunk.sourceType}, ${chunk.chunkIndex}, ${embeddingStr}::halfvec(2048), NOW())
+      `);
+    }
+  });
+
+  return {
+    deletedCount: oldCount,
+    insertedCount: newChunks.length,
+  };
+}
