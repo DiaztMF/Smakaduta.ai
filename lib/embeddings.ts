@@ -85,3 +85,52 @@ export async function generateEmbeddings(
 
   return embeddings;
 }
+
+/**
+ * Generate embeddings for multiple texts in throttled batches with retry logic.
+ */
+export async function batchGenerateEmbeddings(
+  texts: string[],
+  inputType: "query" | "passage" = "passage",
+  batchSize: number = 3,
+  delayMs: number = 250
+): Promise<number[][]> {
+  const allEmbeddings: number[][] = [];
+
+  for (let i = 0; i < texts.length; i += batchSize) {
+    const chunkBatch = texts.slice(i, i + batchSize);
+
+    // Process batch with retry
+    const batchResults = await Promise.all(
+      chunkBatch.map(async (text, index) => {
+        let attempts = 0;
+        const maxAttempts = 3;
+        while (attempts < maxAttempts) {
+          try {
+            return await generateEmbedding(text, inputType);
+          } catch (error) {
+            attempts++;
+            if (attempts >= maxAttempts) {
+              throw new Error(
+                `Failed embedding chunk ${i + index} after ${maxAttempts} attempts: ${
+                  error instanceof Error ? error.message : "Unknown error"
+                }`
+              );
+            }
+            // Exponential backoff delay
+            await new Promise((resolve) => setTimeout(resolve, delayMs * attempts * 2));
+          }
+        }
+        throw new Error(`Failed embedding chunk ${i + index}`);
+      })
+    );
+
+    allEmbeddings.push(...batchResults);
+
+    if (i + batchSize < texts.length && delayMs > 0) {
+      await new Promise((resolve) => setTimeout(resolve, delayMs));
+    }
+  }
+
+  return allEmbeddings;
+}
