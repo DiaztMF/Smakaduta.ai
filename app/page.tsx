@@ -131,7 +131,7 @@ export default function ChatPage() {
                 <div className="flex items-center gap-1.5">
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <span className="hidden sm:inline-flex">
+                      <span className="inline-flex">
                         <SpeechInput
                           type="button"
                           lang="id-ID"

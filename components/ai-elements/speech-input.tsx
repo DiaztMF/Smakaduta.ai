@@ -96,7 +96,7 @@ export const SpeechInput = ({
 }: SpeechInputProps) => {
   const [isListening, setIsListening] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [mode] = useState<SpeechInputMode>(detectSpeechInputMode);
+  const [mode, setMode] = useState<SpeechInputMode>("none");
   const [isRecognitionReady, setIsRecognitionReady] = useState(false);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -107,6 +107,11 @@ export const SpeechInput = ({
   >(onTranscriptionChange);
   const onAudioRecordedRef =
     useRef<SpeechInputProps["onAudioRecorded"]>(onAudioRecorded);
+
+  // Detect speech input mode on client mount to avoid SSR hydration mismatch
+  useEffect(() => {
+    setMode(detectSpeechInputMode());
+  }, []);
 
   // Keep refs in sync
   onTranscriptionChangeRef.current = onTranscriptionChange;
@@ -154,7 +159,9 @@ export const SpeechInput = ({
       }
     };
 
-    const handleError = () => {
+    const handleError = (event: Event) => {
+      const speechError = event as SpeechRecognitionErrorEvent;
+      console.warn("SpeechRecognition error:", speechError.error);
       setIsListening(false);
     };
 
