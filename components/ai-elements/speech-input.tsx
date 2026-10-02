@@ -273,9 +273,18 @@ export const SpeechInput = ({
   const toggleListening = useCallback(() => {
     if (mode === "speech-recognition" && recognitionRef.current) {
       if (isListening) {
-        recognitionRef.current.stop();
+        try {
+          recognitionRef.current.stop();
+        } catch (err) {
+          console.warn("Error stopping SpeechRecognition:", err);
+        }
       } else {
-        recognitionRef.current.start();
+        try {
+          recognitionRef.current.start();
+        } catch (err) {
+          console.warn("Error starting SpeechRecognition:", err);
+          setIsListening(false);
+        }
       }
     } else if (mode === "media-recorder") {
       if (isListening) {
